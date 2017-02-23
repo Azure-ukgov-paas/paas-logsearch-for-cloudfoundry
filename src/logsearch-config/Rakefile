@@ -1,0 +1,72 @@
+require 'erb'
+require 'rake'
+
+task :clean do
+  mkdir_p "target"
+  rm_rf "target/*"
+end
+
+desc "Builds filters & dashboards"
+task :build => :clean do
+  puts "===> Building ..."
+  compile_erb 'src/logstash-filters/default.conf.erb', 'target/logstash-filters-default.conf'
+  compile_erb 'src/es-mappings/logs-template.json.erb', 'target/logs-template.json'
+
+  puts "===> Artifacts:"
+  puts `find target`
+end
+
+desc "Runs unit tests against filters"
+task :utest, [:rspec_files] => :build do |t, args|
+  args.with_defaults(:rspec_files => "$(find test -name *-spec.rb ! -name *-it-spec.rb)")
+  puts "===> Testing ..."
+  sh %Q[ vendor/logstash/bin/rspec #{args[:rspec_files]} --colour ]
+end
+
+desc "Runs integration tests against filters"
+task :itest, [:rspec_files] => :build do |t, args|
+  args.with_defaults(:rspec_files => "$(find test -name *-it-spec.rb)")
+  puts "===> Integration Testing ..."
+  sh %Q[ vendor/logstash/bin/rspec #{args[:rspec_files]} --colour ]
+end
+
+desc "Runs JSON validation tests"
+task :json, [:json_files] => :build do |t, args|
+  args.with_defaults(:json_files => "$(find target -name *.json)")
+  puts "===> Validating JSON data ..."
+  sh %Q[ jsonlint #{args[:json_files]} ]
+end
+
+desc "Runs YAML validation tests"
+task :yaml, [:yaml_files] => :build do |t, args|
+  args.with_defaults(:yaml_files => "$(find ../.. -path ../../src -prune -o -name '*.yml' -print)")
+  puts "===> Validating YAML data ..."
+  sh %Q[ yaml-lint #{args[:yaml_files]} ]
+end
+
+task default: [
+  :utest,
+  :itest,
+  :json,
+  :yaml
+]
+
+def unescape_embedded_doublequote(str)
+  str.gsub("_eQT_", '\\\\\\\\\"')
+end
+
+def unescape_embedded_newline(str)
+  str.gsub('_eLF_', '\\\\\\\\n')
+end
+
+def compile_erb(source_file, dest_file)
+  if File.extname(source_file) == '.erb'
+    output = ERB.new(File.read(source_file)).result(binding)
+    output = unescape_embedded_doublequote(output)
+    output = unescape_embedded_newline(output)
+    File.write(dest_file, output)
+    puts "ERB #{source_file} -> #{dest_file}"
+  else
+    cp source_file, dest_file
+  end
+end

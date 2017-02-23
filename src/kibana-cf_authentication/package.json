@@ -1,0 +1,24 @@
+{
+  "name": "authentication",
+  "version": "0.6.0",
+  "description": "Integrations Kibana into CF's OAuth 2 authentication mechanism",
+  "repository": {
+    "type": "git",
+    "url": "http://guthub.com/stayup/kibana-cf_authentication.git"
+  },
+  "dependencies": {
+    "bell": "5.4.0",
+    "bluebird": "^2.9.30",
+    "catbox": "^6.0.0",
+    "catbox-redis": "^1.0.7",
+    "hapi-auth-cookie": "3.1.0",
+    "request": "^2.40.0",
+    "uuid": "^2.0.1"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-clean": "^0.4.0",
+    "grunt-less": "^0.1.7"
+  },
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,3 @@
+[submodule "src/firehose-to-syslog"]
+	path = src/firehose-to-syslog
+	url = https://github.com/cloudfoundry-community/firehose-to-syslog.git
